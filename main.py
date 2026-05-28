@@ -7,9 +7,13 @@ from constants import SCREEN_HEIGHT, SCREEN_WIDTH, PLAYER_SHOOT_COOLDOWN_SECONDS
 from logger import log_event, log_state
 from player import Player
 from shot import Shot
+from score import Score
 
 
 def main() -> None:
+    with open("highscore.txt", "r") as txt:
+        content = txt.read()
+        current_high_score = int(content)
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     clock = pygame.time.Clock()
@@ -25,7 +29,10 @@ def main() -> None:
     asteroid_field = AsteroidField()
 
     Player.containers = (updatable, drawable)
+    
+    Score.containers = (updatable, drawable)
 
+    score = Score(0)
     player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
 
     dt = 0.0
@@ -44,13 +51,18 @@ def main() -> None:
             if asteroid.collides_with(player):
                 log_event("player_hit")
                 print("Game over!")
+                if score.current_value > current_high_score:
+                    new_high_score = score.current_value
+                    print(f"New high score! {new_high_score}")
+                    with open("highscore.txt", "w") as txt:
+                        txt.write(str(new_high_score))
                 sys.exit()
             for shot in shots:
                 if asteroid.collides_with(shot):
                     log_event("asteroid_shot")
                     shot.kill()
                     asteroid.split()
-            
+                    score.plus_one()
                 
                 
                 
